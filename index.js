@@ -1,5 +1,5 @@
 // A graph data structure with depth-first search and topological sort.
-module.exports = function Graph(serialized){
+module.exports = function Graph(serialized) {
 
   // The returned graph instance.
   var graph = {
@@ -17,8 +17,33 @@ module.exports = function Graph(serialized){
     topologicalSort: topologicalSort,
     shortestPath: shortestPath,
     serialize: serialize,
-    deserialize: deserialize
+    deserialize: deserialize,
+    cycleDetection: cycleDetection
   };
+
+  function cycleDetection(sourceNodes, includeSourceNodes) {
+
+    if (typeof includeSourceNodes !== "boolean") {
+      includeSourceNodes = true;
+    }
+
+    var visited = {};
+    var nodeList = [];
+
+    function DFSVisit(node) {
+      if (!visited[node]) {
+        visited[node] = true;//נשנה את ערכו ל true
+        adjacent(node).forEach(DFSVisit);//נפעיל על כל השכנים שלו את האלגוריתם
+        nodeList.push(node);//נוסיף אותו למערך הסיום
+      } else {
+      }
+    }
+
+    if (includeSourceNodes) {
+      sourceNodes.forEach(DFSVisit);
+    }
+    return nodeList;
+  }
 
   // The adjacency list of the graph.
   // Keys are node ids.
@@ -31,26 +56,26 @@ module.exports = function Graph(serialized){
   var edgeWeights = {};
 
   // If a serialized graph was passed into the constructor, deserialize it.
-  if(serialized){
+  if (serialized) {
     deserialize(serialized);
   }
 
   // Adds a node to the graph.
   // If node was already added, this function does nothing.
   // If node was not already added, this function sets up an empty adjacency list.
-  function addNode(node){
+  function addNode(node) {
     edges[node] = adjacent(node);
     return graph;
   }
 
   // Removes a node from the graph.
   // Also removes incoming and outgoing edges.
-  function removeNode(node){
-    
+  function removeNode(node) {
+
     // Remove incoming edges.
-    Object.keys(edges).forEach(function (u){
-      edges[u].forEach(function (v){
-        if(v === node){
+    Object.keys(edges).forEach(function (u) {
+      edges[u].forEach(function (v) {
+        if (v === node) {
           removeEdge(u, v);
         }
       });
@@ -63,11 +88,11 @@ module.exports = function Graph(serialized){
   }
 
   // Gets the list of nodes that have been added to the graph.
-  function nodes(){
+  function nodes() {
     var nodeSet = {};
-    Object.keys(edges).forEach(function (u){
+    Object.keys(edges).forEach(function (u) {
       nodeSet[u] = true;
-      edges[u].forEach(function (v){
+      edges[u].forEach(function (v) {
         nodeSet[v] = true;
       });
     });
@@ -76,32 +101,32 @@ module.exports = function Graph(serialized){
 
   // Gets the adjacent node list for the given node.
   // Returns an empty array for unknown nodes.
-  function adjacent(node){
+  function adjacent(node) {
     return edges[node] || [];
   }
 
   // Computes a string encoding of an edge,
   // for use as a key in an object.
-  function encodeEdge(u, v){
+  function encodeEdge(u, v) {
     return u + "|" + v;
   }
 
   // Sets the weight of the given edge.
-  function setEdgeWeight(u, v, weight){
+  function setEdgeWeight(u, v, weight) {
     edgeWeights[encodeEdge(u, v)] = weight;
     return graph;
   }
 
   // Gets the weight of the given edge.
   // Returns 1 if no weight was previously set.
-  function getEdgeWeight(u, v){
+  function getEdgeWeight(u, v) {
     var weight = edgeWeights[encodeEdge(u, v)];
     return weight === undefined ? 1 : weight;
   }
 
   // Adds an edge from node u to node v.
   // Implicitly adds the nodes if they were not already added.
-  function addEdge(u, v, weight){
+  function addEdge(u, v, weight) {
     addNode(u);
     addNode(v);
     adjacent(u).push(v);
@@ -116,9 +141,9 @@ module.exports = function Graph(serialized){
   // Removes the edge from node u to node v.
   // Does not remove the nodes.
   // Does nothing if the edge does not exist.
-  function removeEdge(u, v){
-    if(edges[u]){
-      edges[u] = adjacent(u).filter(function (_v){
+  function removeEdge(u, v) {
+    if (edges[u]) {
+      edges[u] = adjacent(u).filter(function (_v) {
         return _v !== v;
       });
     }
@@ -127,21 +152,21 @@ module.exports = function Graph(serialized){
 
   // Computes the indegree for the given node.
   // Not very efficient, costs O(E) where E = number of edges.
-  function indegree(node){
+  function indegree(node) {
     var degree = 0;
-    function check(v){
-      if(v === node){
+    function check(v) {
+      if (v === node) {
         degree++;
       }
     }
-    Object.keys(edges).forEach(function (u){
+    Object.keys(edges).forEach(function (u) {
       edges[u].forEach(check);
     });
     return degree;
   }
 
   // Computes the outdegree for the given node.
-  function outdegree(node){
+  function outdegree(node) {
     return node in edges ? edges[node].length : 0;
   }
 
@@ -152,34 +177,34 @@ module.exports = function Graph(serialized){
   // exclude the source nodes from the result (true by default).
   // If `sourceNodes` is not specified, all nodes in the graph
   // are used as source nodes.
-  function depthFirstSearch(sourceNodes, includeSourceNodes){
+  function depthFirstSearch(sourceNodes, includeSourceNodes) {
 
-    if(!sourceNodes){
+    if (!sourceNodes) {
       sourceNodes = nodes();
     }
 
-    if(typeof includeSourceNodes !== "boolean"){
+    if (typeof includeSourceNodes !== "boolean") {
       includeSourceNodes = true;
     }
 
     var visited = {};
     var nodeList = [];
 
-    function DFSVisit(node){
-      if(!visited[node]){
+    function DFSVisit(node) {
+      if (!visited[node]) {
         visited[node] = true;
         adjacent(node).forEach(DFSVisit);
         nodeList.push(node);
       }
     }
 
-    if(includeSourceNodes){
+    if (includeSourceNodes) {
       sourceNodes.forEach(DFSVisit);
     } else {
-      sourceNodes.forEach(function (node){
+      sourceNodes.forEach(function (node) {
         visited[node] = true;
       });
-      sourceNodes.forEach(function (node){
+      sourceNodes.forEach(function (node) {
         adjacent(node).forEach(DFSVisit);
       });
     }
@@ -191,14 +216,14 @@ module.exports = function Graph(serialized){
   // such that for each visited edge (u, v), u comes before v in the list.
   // Amazingly, this comes from just reversing the result from depth first search.
   // Cormen et al. "Introduction to Algorithms" 3rd Ed. p. 613
-  function topologicalSort(sourceNodes, includeSourceNodes){
+  function topologicalSort(sourceNodes, includeSourceNodes) {
     return depthFirstSearch(sourceNodes, includeSourceNodes).reverse();
   }
 
   // Dijkstra's Shortest Path Algorithm.
   // Cormen et al. "Introduction to Algorithms" 3rd Ed. p. 658
   // Variable and function names correspond to names in the book.
-  function shortestPath(source, destination){
+  function shortestPath(source, destination) {
 
     // Upper bounds for shortest path weights from source.
     var d = {};
@@ -209,8 +234,8 @@ module.exports = function Graph(serialized){
     // Poor man's priority queue, keyed on d.
     var q = {};
 
-    function initializeSingleSource(){
-      nodes().forEach(function (node){
+    function initializeSingleSource() {
+      nodes().forEach(function (node) {
         d[node] = Infinity;
       });
       if (d[source] !== Infinity) {
@@ -223,22 +248,22 @@ module.exports = function Graph(serialized){
     }
 
     // Adds entries in q for all nodes.
-    function initializePriorityQueue(){
-      nodes().forEach(function (node){
+    function initializePriorityQueue() {
+      nodes().forEach(function (node) {
         q[node] = true;
       });
     }
 
     // Returns true if q is empty.
-    function priorityQueueEmpty(){
+    function priorityQueueEmpty() {
       return Object.keys(q).length === 0;
     }
 
     // Linear search to extract (find and remove) min from q.
-    function extractMin(){
+    function extractMin() {
       var min = Infinity;
       var minNode;
-      Object.keys(q).forEach(function(node){
+      Object.keys(q).forEach(function (node) {
         if (d[node] < min) {
           min = d[node];
           minNode = node;
@@ -253,7 +278,7 @@ module.exports = function Graph(serialized){
       return minNode;
     }
 
-    function relax(u, v){
+    function relax(u, v) {
       var w = getEdgeWeight(u, v);
       if (d[v] > d[u] + w) {
         d[v] = d[u] + w;
@@ -261,12 +286,12 @@ module.exports = function Graph(serialized){
       }
     }
 
-    function dijkstra(){
+    function dijkstra() {
       initializeSingleSource();
       initializePriorityQueue();
-      while(!priorityQueueEmpty()){
+      while (!priorityQueueEmpty()) {
         var u = extractMin();
-        adjacent(u).forEach(function (v){
+        adjacent(u).forEach(function (v) {
           relax(u, v);
         });
       }
@@ -274,11 +299,11 @@ module.exports = function Graph(serialized){
 
     // Assembles the shortest path by traversing the
     // predecessor subgraph from destination to source.
-    function path(){
+    function path() {
       var nodeList = [];
       var weight = 0;
       var node = destination;
-      while(p[node]){
+      while (p[node]) {
         nodeList.push(node);
         weight += getEdgeWeight(p[node], node);
         node = p[node];
@@ -298,17 +323,17 @@ module.exports = function Graph(serialized){
   }
 
   // Serializes the graph.
-  function serialize(){
+  function serialize() {
     var serialized = {
-      nodes: nodes().map(function (id){
+      nodes: nodes().map(function (id) {
         return { id: id };
       }),
       links: []
     };
 
-    serialized.nodes.forEach(function (node){
+    serialized.nodes.forEach(function (node) {
       var source = node.id;
-      adjacent(source).forEach(function (target){
+      adjacent(source).forEach(function (target) {
         serialized.links.push({
           source: source,
           target: target,
@@ -321,11 +346,11 @@ module.exports = function Graph(serialized){
   }
 
   // Deserializes the given serialized graph.
-  function deserialize(serialized){
-    serialized.nodes.forEach(function (node){ addNode(node.id); });
-    serialized.links.forEach(function (link){ addEdge(link.source, link.target, link.weight); });
+  function deserialize(serialized) {
+    serialized.nodes.forEach(function (node) { addNode(node.id); });
+    serialized.links.forEach(function (link) { addEdge(link.source, link.target, link.weight); });
     return graph;
   }
-  
+
   return graph;
 }
